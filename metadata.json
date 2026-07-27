@@ -1,0 +1,6 @@
+{
+  "name": "PDF Master",
+  "description": "A powerful offline-first PDF Tools app. Merge, split, compress, watermark, protect, and manage your PDFs with native speed and beautiful Material 3 design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
