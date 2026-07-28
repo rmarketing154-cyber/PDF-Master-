@@ -11,12 +11,15 @@ import kotlinx.coroutines.launch
 
 object SoundHelper {
     private const val TAG = "SoundHelper"
+    
+    var isSoundEnabled = true
 
     /**
      * Plays a standard light keyboard/button click sound effect using the system AudioManager.
      * This respects the user's system sound settings and volume.
      */
     fun playClick(context: Context) {
+        if (!isSoundEnabled) return
         try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
             audioManager?.playSoundEffect(AudioManager.FX_KEY_CLICK, 0.6f)
@@ -30,6 +33,7 @@ object SoundHelper {
      * Generates a high-pitched double chirp (pleasant confirmation).
      */
     fun playSuccess(context: Context) {
+        if (!isSoundEnabled) return
         try {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
@@ -56,6 +60,7 @@ object SoundHelper {
      * Generates a deeper double buzz signaling an unsuccessful action.
      */
     fun playError(context: Context) {
+        if (!isSoundEnabled) return
         try {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
@@ -81,6 +86,7 @@ object SoundHelper {
      * Plays an ascending celebration chime sequence for premium rewards unlocked.
      */
     fun playRewardUnlocked(context: Context) {
+        if (!isSoundEnabled) return
         try {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null

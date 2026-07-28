@@ -39,6 +39,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import android.content.Context
+import android.content.Intent
 import com.example.ads.StartIoAdsManager
 import com.example.data.PdfDatabase
 import com.example.data.PdfRepository
@@ -71,6 +73,9 @@ class MainActivity : ComponentActivity() {
         // Initialize Start.io Ads SDK using App ID 206743399
         StartIoAdsManager.initialize(applicationContext)
 
+        // Schedule 3-hour friendly reminder notification
+        scheduleThreeHourReminder(applicationContext)
+
         // Instantiate PDF ViewModel
         val viewModel: PdfViewModel by viewModels { PdfViewModelFactory(repository) }
 
@@ -93,6 +98,31 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun scheduleThreeHourReminder(context: Context) {
+        try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? android.app.AlarmManager
+            if (alarmManager != null) {
+                val intent = Intent(context, ReminderReceiver::class.java)
+                val pendingIntent = android.app.PendingIntent.getBroadcast(
+                    context,
+                    100,
+                    intent,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) android.app.PendingIntent.FLAG_IMMUTABLE else 0
+                )
+                val intervalMillis = 3 * 60 * 60 * 1000L // 3 Hours
+                val triggerAtMillis = System.currentTimeMillis() + intervalMillis
+                alarmManager.setInexactRepeating(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    intervalMillis,
+                    pendingIntent
+                )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to schedule repeating reminder", e)
         }
     }
 }
