@@ -75,6 +75,11 @@ fun ToolsScreen(
             ToolDefinition("excel_to_pdf", "Excel to PDF", "Convert Excel spreadsheet to PDF", Icons.Default.TableView, Color(0xFF2E7D32), "Create & Convert"),
             ToolDefinition("pdf_to_ppt", "PDF to PowerPoint", "Convert PDF to slide presentation", Icons.Default.Slideshow, Color(0xFFFF5722), "Create & Convert"),
             ToolDefinition("web_to_pdf", "Web to PDF", "Convert live websites or HTML to PDF", Icons.Default.Web, Color(0xFF1E88E5), "Create & Convert"),
+            ToolDefinition("text_to_pdf", "Text to PDF", "Convert plain or rich text to premium PDF", Icons.Default.TextFields, Color(0xFF9C27B0), "Create & Convert"),
+
+            // Smart Web & QR Utilities
+            ToolDefinition("url_shortener", "URL Shortener & QR", "Shorten any URL & generate stats tracker", Icons.Default.Link, Color(0xFF00ACC1), "Smart Web & QR Utilities (Premium)"),
+            ToolDefinition("photo_to_qr", "Photo to QR Code", "Convert any image or snap to 4K QR Code", Icons.Default.QrCodeScanner, Color(0xFFFF3D00), "Smart Web & QR Utilities (Premium)"),
             
             // Form Filling & E-Sign
             ToolDefinition("fill_forms", "Fill PDF Forms", "Fill interactive inputs & sign", Icons.Default.EditNote, Color(0xFFE91E63), "Form Filling & E-Sign"),
@@ -324,8 +329,9 @@ fun ToolsScreen(
             "security_lock" -> showAppLockSecurityDialog = true
             "pdf_to_word", "word_to_pdf", "excel_to_pdf", "pdf_to_ppt", "web_to_pdf",
             "metadata_editor", "grayscale_pdf", "repair_pdf", "pdf_compare", "bates_numbering",
-            "flatten_pdf", "add_page_numbers", "redact_pdf" -> {
-                if (allPdfs.isEmpty() && toolId != "web_to_pdf") {
+            "flatten_pdf", "add_page_numbers", "redact_pdf", "text_to_pdf", "url_shortener", "photo_to_qr" -> {
+                val isGenerator = toolId == "web_to_pdf" || toolId == "text_to_pdf" || toolId == "url_shortener" || toolId == "photo_to_qr"
+                if (allPdfs.isEmpty() && !isGenerator) {
                     Toast.makeText(context, "অনুগ্রহ করে প্রথমে একটি পিডিএফ ইম্পোর্ট বা স্ক্যান করুন!", Toast.LENGTH_LONG).show()
                 } else {
                     val matchingTool = toolsList.firstOrNull { it.id == toolId }
@@ -418,7 +424,10 @@ fun ToolsScreen(
 
             // Group tools by categories
             val categories = toolsList.groupBy { it.category }
-            categories.forEach { (catName, catTools) ->
+            categories.entries.forEachIndexed { index, entry ->
+                val catName = entry.key
+                val catTools = entry.value
+
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
                         text = catName,
@@ -446,6 +455,34 @@ fun ToolsScreen(
                             }
                         }
                     )
+                }
+
+                // Inject beautiful native-looking banner ad between categories
+                if (index == 2 || index == 5) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "SPONSORED ADVERTISEMENT",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(bottom = 6.dp)
+                                )
+                                AdBanner(modifier = Modifier.fillMaxWidth())
+                            }
+                        }
+                    }
                 }
             }
             

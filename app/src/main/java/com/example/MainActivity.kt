@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -85,17 +87,22 @@ class MainActivity : ComponentActivity() {
             // Dark Mode preferences
             val systemTheme = isSystemInDarkTheme()
             var isDarkMode by rememberSaveable { mutableStateOf(systemTheme) }
+            var showSplashScreen by remember { mutableStateOf(true) }
 
             MyApplicationTheme(darkTheme = isDarkMode) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppMainLayout(
-                        viewModel = viewModel,
-                        isDarkMode = isDarkMode,
-                        onThemeChange = { isDarkMode = it }
-                    )
+                    if (showSplashScreen) {
+                        AnimatedSplashScreen(onDismiss = { showSplashScreen = false })
+                    } else {
+                        AppMainLayout(
+                            viewModel = viewModel,
+                            isDarkMode = isDarkMode,
+                            onThemeChange = { isDarkMode = it }
+                        )
+                    }
                 }
             }
         }
@@ -436,4 +443,133 @@ fun StartupPermissionsDialog(
             }
         }
     )
+}
+
+@Composable
+fun AnimatedSplashScreen(onDismiss: () -> Unit) {
+    var loadingStep by remember { mutableStateOf("Loading secure database modules...") }
+    val infiniteTransition = rememberInfiniteTransition(label = "splash_glow")
+    
+    // Scale pulse animation for logo
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "logo_scale"
+    )
+
+    // Shimmer pulse animation for background
+    val alphaGlow by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bg_glow"
+    )
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(600)
+        loadingStep = "Initializing high-fidelity layout engines..."
+        kotlinx.coroutines.delay(650)
+        loadingStep = "Syncing local storage vaults..."
+        kotlinx.coroutines.delay(600)
+        loadingStep = "Optimizing 4K UHD processing engine..."
+        kotlinx.coroutines.delay(500)
+        loadingStep = "Workspace ready!"
+        kotlinx.coroutines.delay(300)
+        onDismiss()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        // Decorative background gradient glow
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = alphaGlow),
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            // Elegant frame around App Logo
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                modifier = Modifier
+                    .size(120.dp)
+                    .scale(scale)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize().padding(12.dp)
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.app_logo),
+                        contentDescription = "PDF Master Logo",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Text(
+                text = "PDF MASTER",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 28.sp,
+                letterSpacing = 2.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Text(
+                text = "PRO 4K ULTRA HD WORKSPACE",
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                letterSpacing = 1.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Sleek animated linear progress indicator
+            LinearProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = loadingStep,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
