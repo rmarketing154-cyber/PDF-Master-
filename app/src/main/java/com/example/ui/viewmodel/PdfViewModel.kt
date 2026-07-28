@@ -1021,6 +1021,45 @@ class PdfViewModel(private val repository: PdfRepository) : ViewModel() {
             }
         }
     }
+
+    fun insertPdfToDatabase(context: Context, pdf: SavedPdfFile, onComplete: (SavedPdfFile) -> Unit = {}) {
+        viewModelScope.launch {
+            val insertedId = repository.insertPdf(pdf)
+            val saved = pdf.copy(id = insertedId.toInt())
+            onComplete(saved)
+        }
+    }
+
+    fun deletePdfFile(context: Context, pdf: SavedPdfFile, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val f = File(pdf.filePath)
+                if (f.exists()) {
+                    f.delete()
+                }
+                repository.deletePdf(pdf)
+                onComplete()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error deleting file", e)
+            }
+        }
+    }
+
+    fun startActionSimulation(message: String, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            _isProcessing.value = true
+            _processingMessage.value = message
+            _processingProgress.value = 0.1f
+            kotlinx.coroutines.delay(600)
+            _processingProgress.value = 0.5f
+            kotlinx.coroutines.delay(500)
+            _processingProgress.value = 0.9f
+            kotlinx.coroutines.delay(400)
+            _isProcessing.value = false
+            _processingProgress.value = null
+            onComplete()
+        }
+    }
 }
 
 class PdfViewModelFactory(private val repository: PdfRepository) : ViewModelProvider.Factory {

@@ -64,13 +64,21 @@ fun ToolsScreen(
             
             // Scanner & OCR
             ToolDefinition("smart_scanner", "Smart Scanner", "Camera scanner with edge crop", Icons.Default.DocumentScanner, Color(0xFFE5A93B), "Scanner & OCR (Premium)"),
+            ToolDefinition("pro_scanner", "AI Pro Scanner", "Multi-page, ID, receipt scans", Icons.Default.PhotoCamera, Color(0xFF1E88E5), "Scanner & OCR (Premium)"),
             ToolDefinition("ocr_image", "Image OCR", "Extract text from pictures", Icons.Default.TextFields, Color(0xFF03DAC6), "Scanner & OCR (Premium)"),
             
             // Create & Convert
             ToolDefinition("img_to_pdf", "Image to PDF", "Convert pictures to PDF", Icons.Default.Image, Color(0xFF4CAF50), "Create & Convert"),
             ToolDefinition("pdf_to_img", "PDF to Image", "Extract pages as images", Icons.Default.BurstMode, Color(0xFFFF9800), "Create & Convert"),
             
-            // Modify & Edit
+            // Form Filling & E-Sign
+            ToolDefinition("fill_forms", "Fill PDF Forms", "Fill interactive inputs & sign", Icons.Default.EditNote, Color(0xFFE91E63), "Form Filling & E-Sign"),
+            ToolDefinition("create_forms", "Create Forms", "Design fillable PDF inputs", Icons.Default.Ballot, Color(0xFF9C27B0), "Form Filling & E-Sign"),
+            ToolDefinition("sign_pdf", "Digital Signature", "Draw signature & seal PDF", Icons.Default.Gesture, Color(0xFF3F51B5), "Form Filling & E-Sign"),
+            ToolDefinition("stamps", "Stamp Library", "APPROVED, VOID, custom stamps", Icons.Default.ConfirmationNumber, Color(0xFF009688), "Form Filling & E-Sign"),
+
+            // Codes & Watermark
+            ToolDefinition("qr_barcode", "Add QR / Barcode", "Insert code overlay into page", Icons.Default.QrCode, Color(0xFF8BC34A), "Codes & Watermark"),
             ToolDefinition("batch_tools", "Batch PDF Tools", "Compress/Rotate 10-50 files", Icons.Default.Layers, Color(0xFFFF3D00), "Modify & Edit"),
             ToolDefinition("merge", "Merge PDF", "Combine multiple files", Icons.Default.Merge, Color(0xFF2196F3), "Modify & Edit"),
             ToolDefinition("split", "Split PDF", "Split document into parts", Icons.Default.CallSplit, Color(0xFF00BCD4), "Modify & Edit"),
@@ -78,6 +86,17 @@ fun ToolsScreen(
             ToolDefinition("watermark", "Watermark PDF", "Add custom text overlay", Icons.Default.Edit, Color(0xFFE91E63), "Modify & Edit"),
             ToolDefinition("rotate", "Rotate PDF", "Rotate pages 90 / 180 deg", Icons.Default.RotateRight, Color(0xFF3F51B5), "Modify & Edit"),
             
+            // File & Storage Vault
+            ToolDefinition("folders_tags", "Folders & Labels", "Categorize & color tag files", Icons.Default.Folder, Color(0xFF00BCD4), "File & Storage Vault"),
+            ToolDefinition("recycle_bin", "Recycle Bin", "30-day secure deleted files", Icons.Default.DeleteOutline, Color(0xFF795548), "File & Storage Vault"),
+            ToolDefinition("duplicate_finder", "Storage Optimizer", "Clean large & duplicate PDFs", Icons.Default.Storage, Color(0xFF607D8B), "File & Storage Vault"),
+            ToolDefinition("cloud_sync", "Cloud Backup Sync", "Google Drive, Dropbox sync", Icons.Default.CloudSync, Color(0xFF3F51B5), "File & Storage Vault"),
+
+            // Advanced Security
+            ToolDefinition("private_vault", "Private Vault", "Invisible secure lock storage", Icons.Default.VisibilityOff, Color(0xFFE65100), "Advanced Security (Premium)"),
+            ToolDefinition("security_lock", "App Lock Settings", "PIN, Biometrics & Generator", Icons.Default.Security, Color(0xFF4CAF50), "Advanced Security (Premium)"),
+            ToolDefinition("admin_panel", "Admin Panel", "Ads & remote configuration", Icons.Default.AdminPanelSettings, Color(0xFFE53935), "Admin Console"),
+
             // Page management
             ToolDefinition("delete_pages", "Delete Pages", "Remove pages from file", Icons.Default.DeleteSweep, Color(0xFFF44336), "Page Management"),
             ToolDefinition("extract_pages", "Extract Pages", "Extract specific page indices", Icons.Default.Pin, Color(0xFF673AB7), "Page Management"),
@@ -103,11 +122,26 @@ fun ToolsScreen(
     var showEncryptDialog by remember { mutableStateOf(false) }
     var showRotateDialog by remember { mutableStateOf(false) }
 
+    // Advanced dialog states
+    var showFillFormsDialog by remember { mutableStateOf(false) }
+    var showCreateFormsDialog by remember { mutableStateOf(false) }
+    var showQrBarcodeDialog by remember { mutableStateOf(false) }
+    var showDigitalSignatureDialog by remember { mutableStateOf(false) }
+    var showStampLibraryDialog by remember { mutableStateOf(false) }
+    var showFoldersTagsDialog by remember { mutableStateOf(false) }
+    var showRecycleBinDialog by remember { mutableStateOf(false) }
+    var showDuplicateLargeFinderDialog by remember { mutableStateOf(false) }
+    var showCloudSyncDialog by remember { mutableStateOf(false) }
+    var showProScannerDialog by remember { mutableStateOf(false) }
+    var showPrivateVaultDialog by remember { mutableStateOf(false) }
+    var showAppLockSecurityDialog by remember { mutableStateOf(false) }
+    var showAdminDiagnosticsDialog by remember { mutableStateOf(false) }
+
     var showPremiumUnlockDialog by remember { mutableStateOf(false) }
     var pendingToolId by remember { mutableStateOf<String?>(null) }
 
     fun isPremiumTool(toolId: String): Boolean {
-        return toolId == "ai_summary" || toolId == "smart_scanner" || toolId == "ocr_image" || toolId == "batch_tools"
+        return toolId == "ai_summary" || toolId == "smart_scanner" || toolId == "ocr_image" || toolId == "batch_tools" || toolId == "pro_scanner" || toolId == "private_vault"
     }
     val multiPdfPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -254,10 +288,23 @@ fun ToolsScreen(
         when (toolId) {
             "ai_summary" -> showAiSummaryDialog = true
             "smart_scanner" -> showSmartScannerDialog = true
+            "pro_scanner" -> showProScannerDialog = true
             "ocr_image" -> showOcrImageDialog = true
             "batch_tools" -> showBatchToolsDialog = true
             "merge" -> multiPdfPicker.launch("application/pdf")
             "img_to_pdf" -> imagePicker.launch("image/*")
+            "fill_forms" -> showFillFormsDialog = true
+            "create_forms" -> showCreateFormsDialog = true
+            "sign_pdf" -> showDigitalSignatureDialog = true
+            "stamps" -> showStampLibraryDialog = true
+            "qr_barcode" -> showQrBarcodeDialog = true
+            "folders_tags" -> showFoldersTagsDialog = true
+            "recycle_bin" -> showRecycleBinDialog = true
+            "duplicate_finder" -> showDuplicateLargeFinderDialog = true
+            "cloud_sync" -> showCloudSyncDialog = true
+            "private_vault" -> showPrivateVaultDialog = true
+            "security_lock" -> showAppLockSecurityDialog = true
+            "admin_panel" -> showAdminDiagnosticsDialog = true
             "split", "extract_pages" -> {
                 if (allPdfs.isEmpty()) {
                     Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
@@ -538,6 +585,110 @@ fun ToolsScreen(
             pdfFiles = allPdfs,
             viewModel = viewModel,
             onDismiss = { showRotateDialog = false }
+        )
+    }
+
+    // Advanced dialogue integrations
+    if (showFillFormsDialog) {
+        FillPdfFormsDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showFillFormsDialog = false }
+        )
+    }
+
+    if (showCreateFormsDialog) {
+        CreateFillableFormsDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showCreateFormsDialog = false }
+        )
+    }
+
+    if (showQrBarcodeDialog) {
+        AddQrBarcodeDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showQrBarcodeDialog = false }
+        )
+    }
+
+    if (showDigitalSignatureDialog) {
+        DigitalSignatureDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showDigitalSignatureDialog = false }
+        )
+    }
+
+    if (showStampLibraryDialog) {
+        StampLibraryDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showStampLibraryDialog = false }
+        )
+    }
+
+    if (showFoldersTagsDialog) {
+        FoldersAndTagsDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showFoldersTagsDialog = false }
+        )
+    }
+
+    if (showRecycleBinDialog) {
+        RecycleBinDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showRecycleBinDialog = false }
+        )
+    }
+
+    if (showDuplicateLargeFinderDialog) {
+        DuplicateLargeFileFinderDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showDuplicateLargeFinderDialog = false }
+        )
+    }
+
+    if (showCloudSyncDialog) {
+        CloudSyncDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showCloudSyncDialog = false }
+        )
+    }
+
+    if (showProScannerDialog) {
+        ProScannerDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showProScannerDialog = false }
+        )
+    }
+
+    if (showPrivateVaultDialog) {
+        PrivateVaultDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showPrivateVaultDialog = false }
+        )
+    }
+
+    if (showAppLockSecurityDialog) {
+        AppLockSecurityDialog(
+            pdfFiles = allPdfs,
+            viewModel = viewModel,
+            onDismiss = { showAppLockSecurityDialog = false }
+        )
+    }
+
+    if (showAdminDiagnosticsDialog) {
+        AdminDiagnosticsDialog(
+            viewModel = viewModel,
+            onDismiss = { showAdminDiagnosticsDialog = false }
         )
     }
 }
