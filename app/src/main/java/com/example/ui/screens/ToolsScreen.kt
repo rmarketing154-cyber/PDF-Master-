@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.SavedPdfFile
 import com.example.ui.components.AdBanner
+import com.example.ui.components.SoundHelper
+import com.example.ui.components.HapticHelper
 import com.example.ui.viewmodel.PdfViewModel
 import java.io.File
 
@@ -97,7 +99,12 @@ fun ToolsScreen(
     var showEncryptDialog by remember { mutableStateOf(false) }
     var showRotateDialog by remember { mutableStateOf(false) }
 
-    // Setup pickers for the tools
+    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
+    var pendingToolId by remember { mutableStateOf<String?>(null) }
+
+    fun isPremiumTool(toolId: String): Boolean {
+        return toolId == "ai_summary" || toolId == "smart_scanner" || toolId == "ocr_image" || toolId == "batch_tools"
+    }
     val multiPdfPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -238,6 +245,47 @@ fun ToolsScreen(
         }
     }
 
+    fun launchTool(toolId: String) {
+        currentActionType = toolId
+        when (toolId) {
+            "ai_summary" -> showAiSummaryDialog = true
+            "smart_scanner" -> showSmartScannerDialog = true
+            "ocr_image" -> showOcrImageDialog = true
+            "batch_tools" -> showBatchToolsDialog = true
+            "merge" -> multiPdfPicker.launch("application/pdf")
+            "img_to_pdf" -> imagePicker.launch("image/*")
+            "split", "extract_pages" -> {
+                if (allPdfs.isEmpty()) {
+                    Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
+                } else {
+                    showSplitDialog = true
+                }
+            }
+            "rotate" -> {
+                if (allPdfs.isEmpty()) {
+                    Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
+                } else {
+                    showRotateDialog = true
+                }
+            }
+            "watermark" -> {
+                if (allPdfs.isEmpty()) {
+                    Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
+                } else {
+                    showWatermarkDialog = true
+                }
+            }
+            "protect", "remove_password" -> {
+                if (allPdfs.isEmpty()) {
+                    Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
+                } else {
+                    showEncryptDialog = true
+                }
+            }
+            else -> singlePdfPicker.launch("application/pdf")
+        }
+    }
+
     Scaffold(
         bottomBar = {
             AdBanner(modifier = Modifier.background(MaterialTheme.colorScheme.surface))
@@ -283,47 +331,19 @@ fun ToolsScreen(
                 }
 
                 items(catTools) { tool ->
+                    val isPremium = isPremiumTool(tool.id)
                     ToolCardItem(
                         tool = tool,
+                        isPremium = isPremium,
+                        isUnlocked = isPremiumUnlocked,
                         onClick = {
-                            com.example.ui.components.HapticHelper.triggerClick(context)
-                            currentActionType = tool.id
-                            when (tool.id) {
-                                "ai_summary" -> showAiSummaryDialog = true
-                                "smart_scanner" -> showSmartScannerDialog = true
-                                "ocr_image" -> showOcrImageDialog = true
-                                "batch_tools" -> showBatchToolsDialog = true
-                                "merge" -> multiPdfPicker.launch("application/pdf")
-                                "img_to_pdf" -> imagePicker.launch("image/*")
-                                "split", "extract_pages" -> {
-                                    if (allPdfs.isEmpty()) {
-                                        Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
-                                    } else {
-                                        showSplitDialog = true
-                                    }
-                                }
-                                "rotate" -> {
-                                    if (allPdfs.isEmpty()) {
-                                        Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
-                                    } else {
-                                        showRotateDialog = true
-                                    }
-                                }
-                                "watermark" -> {
-                                    if (allPdfs.isEmpty()) {
-                                        Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
-                                    } else {
-                                        showWatermarkDialog = true
-                                    }
-                                }
-                                "protect", "remove_password" -> {
-                                    if (allPdfs.isEmpty()) {
-                                        Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
-                                    } else {
-                                        showEncryptDialog = true
-                                    }
-                                }
-                                else -> singlePdfPicker.launch("application/pdf")
+                            SoundHelper.playClick(context)
+                            HapticHelper.triggerClick(context)
+                            if (isPremium && !isPremiumUnlocked) {
+                                pendingToolId = tool.id
+                                showPremiumUnlockDialog = true
+                            } else {
+                                launchTool(tool.id)
                             }
                         }
                     )
@@ -341,6 +361,107 @@ fun ToolsScreen(
         AiSummaryDialog(
             pdfFiles = allPdfs,
             onDismiss = { showAiSummaryDialog = false }
+        )
+    }
+
+    if (showPremiumUnlockDialog && pendingToolId != null) {
+        val pendingTool = toolsList.find { it.id == pendingToolId }
+        val toolTitle = pendingTool?.title ?: "Premium Tool"
+        
+        AlertDialog(
+            onDismissRequest = { showPremiumUnlockDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(Color(0xFFFFD700).copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Premium",
+                        tint = Color(0xFFE5A93B),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Unlock Premium Feature",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "The tool \"$toolTitle\" is a Premium Feature.",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Watch a single short video advertisement to unlock ALL Premium features for free! No paid subscription required.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = 18.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        SoundHelper.playClick(context)
+                        HapticHelper.triggerClick(context)
+                        showPremiumUnlockDialog = false
+                        viewModel.unlockPremiumViaAd(
+                            activity,
+                            onSuccess = {
+                                SoundHelper.playRewardUnlocked(context)
+                                Toast.makeText(context, "Premium unlocked successfully! Enjoy all tools.", Toast.LENGTH_LONG).show()
+                                pendingToolId?.let { id -> launchTool(id) }
+                                pendingToolId = null
+                            },
+                            onFailure = { errorMsg ->
+                                SoundHelper.playError(context)
+                                Toast.makeText(context, "Ad loading failed. Unlocking feature as fallback!", Toast.LENGTH_LONG).show()
+                                SoundHelper.playRewardUnlocked(context)
+                                // Standard fallback: force premium unlock
+                                viewModel.unlockPremiumViaAd(activity, onSuccess = {}, onFailure = {})
+                                pendingToolId?.let { id -> launchTool(id) }
+                                pendingToolId = null
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Watch Video Ad to Unlock", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        SoundHelper.playClick(context)
+                        showPremiumUnlockDialog = false 
+                        pendingToolId = null
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Maybe Later", color = MaterialTheme.colorScheme.outline)
+                }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
@@ -401,6 +522,8 @@ fun ToolsScreen(
 @Composable
 fun ToolCardItem(
     tool: ToolDefinition,
+    isPremium: Boolean,
+    isUnlocked: Boolean,
     onClick: () -> Unit
 ) {
     OutlinedCard(
@@ -412,42 +535,76 @@ fun ToolCardItem(
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, Color(0xFFC4C6D0).copy(alpha = 0.6f))
+        border = BorderStroke(1.dp, if (isPremium && !isUnlocked) Color(0xFFE5A93B).copy(alpha = 0.6f) else Color(0xFFC4C6D0).copy(alpha = 0.6f))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.Start
-        ) {
-            Box(
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
                 modifier = Modifier
-                    .background(tool.tintColor, RoundedCornerShape(12.dp))
-                    .padding(8.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.Start
             ) {
-                Icon(
-                    imageVector = tool.icon,
-                    contentDescription = tool.title,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .background(tool.tintColor, RoundedCornerShape(12.dp))
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = tool.icon,
+                        contentDescription = tool.title,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = tool.title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = tool.description,
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        maxLines = 2,
+                        lineHeight = 12.sp
+                    )
+                }
             }
-            Column {
-                Text(
-                    text = tool.title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = tool.description,
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    maxLines = 2,
-                    lineHeight = 12.sp
-                )
+            
+            if (isPremium) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .background(
+                            if (isUnlocked) Color(0xFF4CAF50).copy(alpha = 0.15f) else Color(0xFFFFD700).copy(alpha = 0.15f),
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isUnlocked) Icons.Default.CheckCircle else Icons.Default.Star,
+                            contentDescription = "Premium",
+                            tint = if (isUnlocked) Color(0xFF4CAF50) else Color(0xFFE5A93B),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = if (isUnlocked) "UNLOCKED" else "PREMIUM",
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isUnlocked) Color(0xFF4CAF50) else Color(0xFFE5A93B)
+                        )
+                    }
+                }
             }
         }
     }

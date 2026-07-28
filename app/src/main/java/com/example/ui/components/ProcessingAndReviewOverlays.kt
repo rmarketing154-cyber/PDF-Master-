@@ -467,9 +467,14 @@ fun SuccessReviewOverlay(
     onPrint: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     var showConfetti by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
+        // Play success sound and trigger haptics
+        SoundHelper.playSuccess(context)
+        HapticHelper.triggerSuccess(context)
+        
         // Confetti rains for 3 seconds then stops to optimize memory/CPU
         delay(3500)
         showConfetti = false
