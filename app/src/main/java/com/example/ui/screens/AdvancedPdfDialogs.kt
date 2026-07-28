@@ -60,8 +60,11 @@ fun processAndSavePdfCopy(
 
         val baseName = sourceFile.fileName.substringBeforeLast(".")
         val extension = sourceFile.fileName.substringAfterLast(".", "pdf")
-        val newFileName = "${baseName}_$suffix.$extension"
-        val outputDirectory = File(context.filesDir, "pdfs")
+        
+        // Remove existing prefix if any, to avoid PDF_Master_PDF_Master_ duplication
+        val cleanBase = baseName.removePrefix("PDF_Master_")
+        val newFileName = "PDF_Master_${cleanBase}_$suffix.$extension"
+        val outputDirectory = File(context.filesDir, "pdf_master")
         if (!outputDirectory.exists()) {
             outputDirectory.mkdirs()
         }

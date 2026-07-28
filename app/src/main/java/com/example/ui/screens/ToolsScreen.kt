@@ -70,12 +70,25 @@ fun ToolsScreen(
             // Create & Convert
             ToolDefinition("img_to_pdf", "Image to PDF", "Convert pictures to PDF", Icons.Default.Image, Color(0xFF4CAF50), "Create & Convert"),
             ToolDefinition("pdf_to_img", "PDF to Image", "Extract pages as images", Icons.Default.BurstMode, Color(0xFFFF9800), "Create & Convert"),
+            ToolDefinition("pdf_to_word", "PDF to Word", "Convert PDF to Word DOCX layout", Icons.Default.Description, Color(0xFF2196F3), "Create & Convert"),
+            ToolDefinition("word_to_pdf", "Word to PDF", "Convert Word DOCX to PDF", Icons.Default.PostAdd, Color(0xFF4CAF50), "Create & Convert"),
+            ToolDefinition("excel_to_pdf", "Excel to PDF", "Convert Excel spreadsheet to PDF", Icons.Default.TableView, Color(0xFF2E7D32), "Create & Convert"),
+            ToolDefinition("pdf_to_ppt", "PDF to PowerPoint", "Convert PDF to slide presentation", Icons.Default.Slideshow, Color(0xFFFF5722), "Create & Convert"),
+            ToolDefinition("web_to_pdf", "Web to PDF", "Convert live websites or HTML to PDF", Icons.Default.Web, Color(0xFF1E88E5), "Create & Convert"),
             
             // Form Filling & E-Sign
             ToolDefinition("fill_forms", "Fill PDF Forms", "Fill interactive inputs & sign", Icons.Default.EditNote, Color(0xFFE91E63), "Form Filling & E-Sign"),
             ToolDefinition("create_forms", "Create Forms", "Design fillable PDF inputs", Icons.Default.Ballot, Color(0xFF9C27B0), "Form Filling & E-Sign"),
             ToolDefinition("sign_pdf", "Digital Signature", "Draw signature & seal PDF", Icons.Default.Gesture, Color(0xFF3F51B5), "Form Filling & E-Sign"),
             ToolDefinition("stamps", "Stamp Library", "APPROVED, VOID, custom stamps", Icons.Default.ConfirmationNumber, Color(0xFF009688), "Form Filling & E-Sign"),
+
+            // Document Engineering (4K Pro)
+            ToolDefinition("metadata_editor", "Metadata Editor", "Edit PDF Author, Title, Tags", Icons.Default.Info, Color(0xFF607D8B), "Document Engineering (4K Pro)"),
+            ToolDefinition("grayscale_pdf", "Grayscale PDF", "Convert color to print-safe grayscale", Icons.Default.ColorLens, Color(0xFF757575), "Document Engineering (4K Pro)"),
+            ToolDefinition("repair_pdf", "Repair Corrupt PDF", "Recover pages from broken PDF files", Icons.Default.BuildCircle, Color(0xFFE53935), "Document Engineering (4K Pro)"),
+            ToolDefinition("pdf_compare", "Compare PDFs", "Highlight visual & text differences", Icons.Default.Compare, Color(0xFF00ACC1), "Document Engineering (4K Pro)"),
+            ToolDefinition("bates_numbering", "Bates Numbering", "Legal indexing & paging system", Icons.Default.Tag, Color(0xFF8E24AA), "Document Engineering (4K Pro)"),
+            ToolDefinition("flatten_pdf", "Flatten PDF Layers", "Merge forms & annotations into image", Icons.Default.LayersClear, Color(0xFFFFB300), "Document Engineering (4K Pro)"),
 
             // Codes & Watermark
             ToolDefinition("qr_barcode", "Add QR / Barcode", "Insert code overlay into page", Icons.Default.QrCode, Color(0xFF8BC34A), "Codes & Watermark"),
@@ -95,16 +108,17 @@ fun ToolsScreen(
             // Advanced Security
             ToolDefinition("private_vault", "Private Vault", "Invisible secure lock storage", Icons.Default.VisibilityOff, Color(0xFFE65100), "Advanced Security (Premium)"),
             ToolDefinition("security_lock", "App Lock Settings", "PIN, Biometrics & Generator", Icons.Default.Security, Color(0xFF4CAF50), "Advanced Security (Premium)"),
-            ToolDefinition("admin_panel", "Admin Panel", "Ads & remote configuration", Icons.Default.AdminPanelSettings, Color(0xFFE53935), "Admin Console"),
 
             // Page management
             ToolDefinition("delete_pages", "Delete Pages", "Remove pages from file", Icons.Default.DeleteSweep, Color(0xFFF44336), "Page Management"),
             ToolDefinition("extract_pages", "Extract Pages", "Extract specific page indices", Icons.Default.Pin, Color(0xFF673AB7), "Page Management"),
             ToolDefinition("reorder_pages", "Reorder Pages", "Rearrange pages sequence", Icons.Default.Reorder, Color(0xFF009688), "Page Management"),
+            ToolDefinition("add_page_numbers", "Add Page Numbers", "Insert custom header/footer pagination", Icons.Default.FormatListNumbered, Color(0xFF673AB7), "Page Management"),
             
-            // Security & Admin
+            // Security & Protection
             ToolDefinition("protect", "Protect PDF", "Lock with secure password", Icons.Default.Lock, Color(0xFFE65100), "Security & Protection"),
-            ToolDefinition("remove_password", "Remove Password", "Unlock password protected files", Icons.Default.LockOpen, Color(0xFF1B5E20), "Security & Protection")
+            ToolDefinition("remove_password", "Remove Password", "Unlock password protected files", Icons.Default.LockOpen, Color(0xFF1B5E20), "Security & Protection"),
+            ToolDefinition("redact_pdf", "Redact PDF", "Black out private information permanently", Icons.Default.BorderColor, Color(0xFF212121), "Security & Protection")
         )
     }
 
@@ -135,7 +149,11 @@ fun ToolsScreen(
     var showProScannerDialog by remember { mutableStateOf(false) }
     var showPrivateVaultDialog by remember { mutableStateOf(false) }
     var showAppLockSecurityDialog by remember { mutableStateOf(false) }
-    var showAdminDiagnosticsDialog by remember { mutableStateOf(false) }
+    
+    // Premium Pro Tools states
+    var showPremiumProToolsDialog by remember { mutableStateOf(false) }
+    var selectedPremiumToolId by remember { mutableStateOf("") }
+    var selectedPremiumToolName by remember { mutableStateOf("") }
 
     var showPremiumUnlockDialog by remember { mutableStateOf(false) }
     var pendingToolId by remember { mutableStateOf<String?>(null) }
@@ -304,7 +322,18 @@ fun ToolsScreen(
             "cloud_sync" -> showCloudSyncDialog = true
             "private_vault" -> showPrivateVaultDialog = true
             "security_lock" -> showAppLockSecurityDialog = true
-            "admin_panel" -> showAdminDiagnosticsDialog = true
+            "pdf_to_word", "word_to_pdf", "excel_to_pdf", "pdf_to_ppt", "web_to_pdf",
+            "metadata_editor", "grayscale_pdf", "repair_pdf", "pdf_compare", "bates_numbering",
+            "flatten_pdf", "add_page_numbers", "redact_pdf" -> {
+                if (allPdfs.isEmpty() && toolId != "web_to_pdf") {
+                    Toast.makeText(context, "অনুগ্রহ করে প্রথমে একটি পিডিএফ ইম্পোর্ট বা স্ক্যান করুন!", Toast.LENGTH_LONG).show()
+                } else {
+                    val matchingTool = toolsList.firstOrNull { it.id == toolId }
+                    selectedPremiumToolId = toolId
+                    selectedPremiumToolName = matchingTool?.title ?: "Premium Tool"
+                    showPremiumProToolsDialog = true
+                }
+            }
             "split", "extract_pages" -> {
                 if (allPdfs.isEmpty()) {
                     Toast.makeText(context, "Please import or scan some PDFs first!", Toast.LENGTH_LONG).show()
@@ -685,10 +714,13 @@ fun ToolsScreen(
         )
     }
 
-    if (showAdminDiagnosticsDialog) {
-        AdminDiagnosticsDialog(
+    if (showPremiumProToolsDialog) {
+        PremiumProToolsDialog(
+            toolId = selectedPremiumToolId,
+            toolName = selectedPremiumToolName,
+            pdfFiles = allPdfs,
             viewModel = viewModel,
-            onDismiss = { showAdminDiagnosticsDialog = false }
+            onDismiss = { showPremiumProToolsDialog = false }
         )
     }
 }
