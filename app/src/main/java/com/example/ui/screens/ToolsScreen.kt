@@ -32,6 +32,10 @@ import com.example.ui.components.AdBanner
 import com.example.ui.components.SoundHelper
 import com.example.ui.components.HapticHelper
 import com.example.ui.viewmodel.PdfViewModel
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
+import com.example.R
 import java.io.File
 
 data class ToolDefinition(
@@ -302,17 +306,36 @@ fun ToolsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                Column(modifier = Modifier.padding(bottom = 8.dp)) {
-                    Text(
-                        text = "PDF Workspace",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Instant local offline-first conversions & edits",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "PDF Workspace",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Instant local offline-first conversions & edits",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.app_logo),
+                        contentDescription = "App Logo",
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(2.dp)
                     )
                 }
             }

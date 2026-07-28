@@ -30,7 +30,7 @@ object SoundHelper {
 
     /**
      * Plays a pleasant success confirmation tone using ToneGenerator.
-     * Generates a high-pitched double chirp (pleasant confirmation).
+     * Generates a premium high-quality ascending triple-chirp chime.
      */
     fun playSuccess(context: Context) {
         if (!isSoundEnabled) return
@@ -38,11 +38,11 @@ object SoundHelper {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
                 try {
-                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
-                    // Harmonized double-tone ascending chirp
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_3, 80)
-                    delay(100)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_7, 120)
+                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 90)
+                    // Beautiful custom chime: brief soft pip followed by crisp ACK confirmation
+                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 50)
+                    delay(70)
+                    toneGen.startTone(ToneGenerator.TONE_PROP_ACK, 120)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in success tone thread", e)
                 } finally {
@@ -57,7 +57,7 @@ object SoundHelper {
 
     /**
      * Plays an error alert buzzer sound using ToneGenerator.
-     * Generates a deeper double buzz signaling an unsuccessful action.
+     * Generates a softer, dual-tone warning signal (not overly harsh, but clear).
      */
     fun playError(context: Context) {
         if (!isSoundEnabled) return
@@ -65,11 +65,9 @@ object SoundHelper {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
                 try {
-                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 85)
-                    // Dual low error buzz
-                    toneGen.startTone(ToneGenerator.TONE_PROP_NACK, 180)
-                    delay(200)
-                    toneGen.startTone(ToneGenerator.TONE_PROP_NACK, 180)
+                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
+                    // Non-intrusive but clear system warning tone
+                    toneGen.startTone(ToneGenerator.TONE_PROP_NACK, 220)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in error tone thread", e)
                 } finally {
@@ -91,15 +89,13 @@ object SoundHelper {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
                 try {
-                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 90)
-                    // High-quality major arpeggio chime (1 -> 5 -> 9 -> D)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_1, 80)
-                    delay(100)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_5, 80)
-                    delay(100)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_9, 80)
-                    delay(100)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_D, 220)
+                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 95)
+                    // Premium sparkling digital arpeggio
+                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 40)
+                    delay(60)
+                    toneGen.startTone(ToneGenerator.TONE_PROP_PROMPT, 60)
+                    delay(80)
+                    toneGen.startTone(ToneGenerator.TONE_PROP_ACK, 180)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in celebration tone thread", e)
                 } finally {

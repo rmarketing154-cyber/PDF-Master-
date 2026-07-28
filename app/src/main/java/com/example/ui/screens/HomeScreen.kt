@@ -36,6 +36,9 @@ import com.example.ui.components.FriendlyEmptyState
 import com.example.ui.components.printPdfFile
 import com.example.ui.components.sharePdfFile
 import com.example.ui.viewmodel.PdfViewModel
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import com.example.R
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -322,47 +325,63 @@ fun HeaderSection(isPremiumUnlocked: Boolean) {
             .background(gradient)
             .padding(24.dp)
     ) {
-        Column {
-            Text(
-                text = "PDF Master",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "All-In-One Offline PDF Utility Suite",
-                color = Color.White.copy(alpha = 0.85f),
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            if (isPremiumUnlocked) {
-                Box(
-                    modifier = Modifier
-                        .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = "Premium", tint = Color.Yellow, modifier = Modifier.size(16.dp))
-                        Text(
-                            text = "PREMIUM SESSION ACTIVE",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Unlock high-quality tools by viewing a rewarded ad!",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    text = "PDF Master",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "All-In-One Offline PDF Utility Suite",
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                if (isPremiumUnlocked) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = "Premium", tint = Color.Yellow, modifier = Modifier.size(16.dp))
+                            Text(
+                                text = "PREMIUM SESSION ACTIVE",
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "Unlock high-quality tools by viewing a rewarded ad!",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
+            Spacer(modifier = Modifier.width(16.dp))
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.15f))
+                    .padding(4.dp)
+            )
         }
     }
 }

@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -618,7 +619,23 @@ fun SuccessReviewOverlay(
 
                     // Download to Device (Primary Action)
                     Button(
-                        onClick = { downloadPdfFile(context, pdfFile) },
+                        onClick = {
+                            val activity = context as? android.app.Activity
+                            if (activity != null) {
+                                com.example.ads.StartIoAdsManager.showRewardedAd(
+                                    activity = activity,
+                                    onRewarded = {
+                                        downloadPdfFile(context, pdfFile)
+                                    },
+                                    onFailed = {
+                                        Toast.makeText(context, "Continuing download...", Toast.LENGTH_SHORT).show()
+                                        downloadPdfFile(context, pdfFile)
+                                    }
+                                )
+                            } else {
+                                downloadPdfFile(context, pdfFile)
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {

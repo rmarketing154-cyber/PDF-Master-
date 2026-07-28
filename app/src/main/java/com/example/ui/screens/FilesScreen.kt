@@ -31,6 +31,9 @@ import com.example.ui.components.FriendlyEmptyState
 import com.example.ui.components.printPdfFile
 import com.example.ui.components.sharePdfFile
 import com.example.ui.viewmodel.PdfViewModel
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import com.example.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,17 +81,36 @@ fun FilesScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Header Title
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "My PDF Vault",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = "Manage and view all your locally stored PDF files",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "My PDF Vault",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Manage and view all your locally stored PDF files",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(2.dp)
                 )
             }
 
