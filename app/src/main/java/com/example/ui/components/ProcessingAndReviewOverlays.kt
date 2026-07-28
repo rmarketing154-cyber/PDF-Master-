@@ -616,19 +616,32 @@ fun SuccessReviewOverlay(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Quick Actions
+                    // Download to Device (Primary Action)
+                    Button(
+                        onClick = { downloadPdfFile(context, pdfFile) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Save to Device / Download", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Secondary Quick Actions
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(
+                        OutlinedButton(
                             onClick = onOpen,
-                            modifier = Modifier.weight(1.3f),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Open", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Open", fontSize = 12.sp)
                         }
 
                         OutlinedButton(
@@ -636,9 +649,9 @@ fun SuccessReviewOverlay(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Share", fontSize = 13.sp)
+                            Text("Share", fontSize = 12.sp)
                         }
 
                         OutlinedButton(
@@ -646,9 +659,9 @@ fun SuccessReviewOverlay(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Print", fontSize = 13.sp)
+                            Text("Print", fontSize = 12.sp)
                         }
                     }
 

@@ -10,8 +10,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Box
@@ -40,6 +43,11 @@ import com.example.ads.StartIoAdsManager
 import com.example.data.PdfDatabase
 import com.example.data.PdfRepository
 import com.example.data.SavedPdfFile
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.ui.text.style.TextAlign
 import com.example.ui.components.PdfReaderScreen
 import com.example.ui.components.printPdfFile
 import com.example.ui.components.sharePdfFile
@@ -96,6 +104,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
     object Settings : Screen("settings", "Settings", Icons.Default.Settings)
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AppMainLayout(
     viewModel: PdfViewModel,
@@ -106,6 +115,21 @@ fun AppMainLayout(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    // Permissions check on entering
+    val permissionsList = remember {
+        buildList {
+            add(android.Manifest.permission.CAMERA)
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                add(android.Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+    }
+    val permissionsState = rememberMultiplePermissionsState(permissionsList)
+    var showPermissionDialog by remember { mutableStateOf(!permissionsState.allPermissionsGranted) }
 
     // Active full screen PDF reading state
     var activePdfForReading by remember { mutableStateOf<SavedPdfFile?>(null) }
@@ -233,7 +257,153 @@ fun AppMainLayout(
                         }
                     )
                 }
+
+                // Startup Permissions Dialog overlay
+                if (showPermissionDialog) {
+                    StartupPermissionsDialog(
+                        permissionsState = permissionsState,
+                        onDismiss = { showPermissionDialog = false }
+                    )
+                }
             }
         }
     }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun StartupPermissionsDialog(
+    permissionsState: com.google.accompanist.permissions.MultiplePermissionsState,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(24.dp),
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Build,
+                contentDescription = "Permissions Required",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(36.dp)
+            )
+        },
+        title = {
+            Text(
+                text = "Permissions Required",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "To unlock and use all features of this app, please grant the following essential permissions:",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 18.sp
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                // Storage explanation
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "Storage / Files",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "To access, convert, and save PDFs on your device.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                // Notifications explanation
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "Notifications",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "To alert you when background tasks (OCR, merges) finish.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                // Camera explanation
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Camera,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "Camera",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "To scan physical pages and convert them directly into PDFs.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    permissionsState.launchMultiplePermissionRequest()
+                    onDismiss()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Grant Permissions", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Not Now", color = MaterialTheme.colorScheme.outline)
+            }
+        }
+    )
 }

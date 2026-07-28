@@ -8,6 +8,10 @@ import com.startapp.sdk.adsbase.StartAppAd
 import com.startapp.sdk.adsbase.StartAppSDK
 import com.startapp.sdk.adsbase.adlisteners.AdEventListener
 import com.startapp.sdk.adsbase.VideoListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 object StartIoAdsManager {
     private const val TAG = "StartIoAdsManager"
@@ -28,10 +32,12 @@ object StartIoAdsManager {
         try {
             // Initialize SDK
             StartAppSDK.init(context, APP_ID, false)
+            // Enable test ads for consistent, high-fill ad loading during testing and review
+            StartAppSDK.setTestAdsEnabled(true)
             // Disable return ads (splash ads on returning to app) for better UX
             StartAppSDK.enableReturnAds(false)
             isInitialized = true
-            Log.d(TAG, "Start.io SDK Initialized with App ID $APP_ID")
+            Log.d(TAG, "Start.io SDK Initialized with App ID $APP_ID (Test Ads Enabled)")
 
             // Preload Ads
             preloadInterstitial(context)
@@ -102,6 +108,43 @@ object StartIoAdsManager {
 
     fun showRewardedAd(activity: Activity, onRewarded: () -> Unit, onFailed: () -> Unit) {
         try {
+            if (isRewardedLoaded) {
+                showLoadedRewarded(activity, onRewarded, onFailed)
+            } else {
+                Log.d(TAG, "Rewarded ad not loaded yet. Requesting load and waiting...")
+                preloadRewarded(activity)
+                
+                // Smart-wait coroutine loop (up to 3 seconds, checking every 500ms)
+                CoroutineScope(Dispatchers.Main).launch {
+                    val toast = android.widget.Toast.makeText(activity, "Loading Video Ad...", android.widget.Toast.LENGTH_SHORT)
+                    toast.show()
+                    
+                    var elapsed = 0
+                    val timeout = 3000
+                    val checkInterval = 500
+                    
+                    while (!isRewardedLoaded && elapsed < timeout) {
+                        delay(checkInterval.toLong())
+                        elapsed += checkInterval
+                    }
+                    
+                    toast.cancel()
+                    if (isRewardedLoaded) {
+                        showLoadedRewarded(activity, onRewarded, onFailed)
+                    } else {
+                        Log.w(TAG, "Rewarded ad failed to load within timeout. Executing failure callback.")
+                        onFailed()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking/showing Rewarded Ad", e)
+            onFailed()
+        }
+    }
+
+    private fun showLoadedRewarded(activity: Activity, onRewarded: () -> Unit, onFailed: () -> Unit) {
+        try {
             val ad = rewardedAd
             if (ad != null && isRewardedLoaded) {
                 ad.setVideoListener(object : VideoListener {
@@ -115,12 +158,10 @@ object StartIoAdsManager {
                 isRewardedLoaded = false // Reset
                 preloadRewarded(activity) // Preload next
             } else {
-                Log.d(TAG, "Rewarded ad not loaded. Showing fallback dialog or failing gracefully.")
-                preloadRewarded(activity) // Retry preloading
                 onFailed()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error showing Rewarded Ad", e)
+            Log.e(TAG, "Error playing loaded rewarded ad", e)
             onFailed()
         }
     }

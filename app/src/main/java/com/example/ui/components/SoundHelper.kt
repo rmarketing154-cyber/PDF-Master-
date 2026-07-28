@@ -34,16 +34,15 @@ object SoundHelper {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
                 try {
-                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 75)
-                    // High pitch pleasant beep 1
-                    toneGen.startTone(ToneGenerator.TONE_PROP_ACK, 120)
-                    delay(150)
-                    // High pitch pleasant beep 2
-                    toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 80)
+                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
+                    // Harmonized double-tone ascending chirp
+                    toneGen.startTone(ToneGenerator.TONE_DTMF_3, 80)
+                    delay(100)
+                    toneGen.startTone(ToneGenerator.TONE_DTMF_7, 120)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in success tone thread", e)
                 } finally {
-                    delay(200)
+                    delay(250)
                     toneGen?.release()
                 }
             }
@@ -61,9 +60,11 @@ object SoundHelper {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
                 try {
-                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
-                    // Low error buzz
-                    toneGen.startTone(ToneGenerator.TONE_PROP_NACK, 250)
+                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 85)
+                    // Dual low error buzz
+                    toneGen.startTone(ToneGenerator.TONE_PROP_NACK, 180)
+                    delay(200)
+                    toneGen.startTone(ToneGenerator.TONE_PROP_NACK, 180)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in error tone thread", e)
                 } finally {
@@ -84,19 +85,19 @@ object SoundHelper {
             CoroutineScope(Dispatchers.IO).launch {
                 var toneGen: ToneGenerator? = null
                 try {
-                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 85)
-                    // Chime note 1 (medium high)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_5, 100)
-                    delay(120)
-                    // Chime note 2 (higher)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_9, 100)
-                    delay(120)
-                    // Chime note 3 (highest, triumphant)
-                    toneGen.startTone(ToneGenerator.TONE_DTMF_D, 200)
+                    toneGen = ToneGenerator(AudioManager.STREAM_MUSIC, 90)
+                    // High-quality major arpeggio chime (1 -> 5 -> 9 -> D)
+                    toneGen.startTone(ToneGenerator.TONE_DTMF_1, 80)
+                    delay(100)
+                    toneGen.startTone(ToneGenerator.TONE_DTMF_5, 80)
+                    delay(100)
+                    toneGen.startTone(ToneGenerator.TONE_DTMF_9, 80)
+                    delay(100)
+                    toneGen.startTone(ToneGenerator.TONE_DTMF_D, 220)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in celebration tone thread", e)
                 } finally {
-                    delay(300)
+                    delay(400)
                     toneGen?.release()
                 }
             }

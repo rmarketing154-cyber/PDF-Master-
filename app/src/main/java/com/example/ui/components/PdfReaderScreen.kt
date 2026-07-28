@@ -400,3 +400,45 @@ fun printPdfFile(context: Context, pdfFile: SavedPdfFile) {
         Toast.makeText(context, "Error printing file: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
     }
 }
+
+// Utility to download (copy) PDF file to the public Downloads directory
+fun downloadPdfFile(context: Context, pdfFile: SavedPdfFile) {
+    try {
+        val file = File(pdfFile.filePath)
+        if (!file.exists()) {
+            Toast.makeText(context, "File does not exist", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val resolver = context.contentResolver
+        val filename = pdfFile.fileName
+        
+        val uri = if (android.os.Build.VERSION.SDK_INT >= 29) {
+            val contentValues = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
+            }
+            resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+        } else {
+            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+            val destFile = File(downloadsDir, filename)
+            android.net.Uri.fromFile(destFile)
+        }
+
+        if (uri != null) {
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                file.inputStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+            Toast.makeText(context, "Saved to Downloads: $filename", Toast.LENGTH_LONG).show()
+            SoundHelper.playSuccess(context)
+        } else {
+            Toast.makeText(context, "Could not create file in Downloads", Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: Exception) {
+        Log.e("downloadPdfFile", "Failed to save file to downloads", e)
+        Toast.makeText(context, "Error saving file: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+    }
+}
